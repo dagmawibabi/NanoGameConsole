@@ -2,11 +2,13 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
+#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
 Adafruit_SSD1306 display(-1);
 
 // G L O B A L S
-int state = 4;
+int state = 0;
 int mainMenuItem = 1;
 int mainMenuPage = 1;
 int upBtn = 6;
@@ -22,9 +24,15 @@ void setup() {
 	display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  
 
   // load main menu
-  mainMenu(1, 1);
+  mainMenu(0, 1);
 }
 
+// 
+void goBackToMainMenu(int page, int item) {
+  state = 0;
+  mainMenuPage = 1;
+  mainMenuItem = 1;
+}
 
 // M A I N  M E N U
 bool isItemWhite1 = true;
@@ -160,6 +168,198 @@ void infoPage() {
   display.display();
 }
 
+// A P P S  P A G E 
+int appsListY = 0;
+int appChoiceIndex = 0;
+int totalAppCount = 4;
+void appsPage() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(10, appsListY);
+  display.println(" Apps ");
+  if(appChoiceIndex == 1){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Converter ");
+  if(appChoiceIndex == 2){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Music Player ");
+  if(appChoiceIndex == 3){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Timer ");
+  if(appChoiceIndex == 4){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Calendar ");
+
+  display.display();
+}
+
+// Apps
+// Converter
+int numConverterX = 0;
+int numConverterY = 0;
+int numConvValue = 0;
+void numberConverter() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.setTextColor(WHITE);
+
+  display.print("DEC: ");
+  display.println(numConvValue);
+
+  display.print("HEX: ");
+  display.println(numConvValue, HEX);
+
+  display.print("OCT: ");
+  display.println(numConvValue, OCT);
+
+  display.print("BIN: ");
+  display.println(numConvValue, BIN);
+
+  display.display();
+
+  if(digitalRead(upBtn) == HIGH){
+    numConvValue++;
+  }
+  if(digitalRead(downBtn) == HIGH){
+    numConvValue--;
+  }
+  if(digitalRead(rightBtn) == HIGH){
+    numConvValue *= 2;
+  }
+  if(digitalRead(leftBtn) == HIGH){
+    numConvValue /= 2;
+  }
+  if(digitalRead(bBtn) == HIGH){
+    state = 1;
+    appsListY = 0;
+    appChoiceIndex = 0;
+  }
+}
+
+// Timer
+unsigned long timerCount = 0;
+int timerPaused = true;
+int timerLight = 11;
+void timer() {
+  timerLight++;
+  if(timerLight > 13){
+    timerLight = 11;
+  }
+  if(!timerPaused) {
+    digitalWrite(timerLight, HIGH);
+    delay(100);
+    digitalWrite(timerLight, LOW);
+  } else {
+    digitalWrite(11, HIGH);
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(10, 0);
+  display.println(" Timer ");
+  display.setTextSize(2);
+  display.setCursor(2, 10);
+  if(!timerPaused){
+    timerCount = millis();
+  }
+  int second = timerCount / 1000;
+  int minute = second / 60;
+  // if(second >= 60){
+  //   second = timerCount % 60;
+  // }
+  display.print(minute);
+  display.print(":");
+  display.print(second);
+  display.print(":");
+  display.print(timerCount);
+  display.display();
+
+  if(digitalRead(aBtn) == HIGH){
+    timerPaused = !timerPaused;
+  }
+  if(digitalRead(bBtn) == HIGH){
+    if(timerCount == 0 && timerPaused == true){
+      state = 1;
+      appsListY = 0;
+      appChoiceIndex = 0;
+    } else {
+      timerCount -= timerCount;
+      timerPaused = true;
+    }
+  }
+}
+
+
+// Calendar
+int monthIndex = 1;
+char *monthNames[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+int monthDates[12] = {30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
+char *weekNames[7] = {"M","T", "W", "T", "F", "S", "S"};
+int calendarY = 0;
+int calendarLineCounter = 0;
+
+void calendar() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(BLACK, WHITE);
+  display.setCursor(0, calendarY);
+  display.print("     Calendar      ");
+  display.setTextColor(WHITE);
+  display.setCursor(35, calendarY + 10);
+  display.println(monthNames[monthIndex]);
+  display.setCursor(6, calendarY + 20);
+  // Week Names
+  for(int i = 0; i < 7; i++){
+    display.print(weekNames[i]);
+    display.print("  ");
+  }
+  // Days
+  display.setCursor(5, calendarY + 30);
+  // for(int i = 1; i <= monthDates[monthIndex]; i++){
+  //   calendarLineCounter++;
+  //   if(calendarLineCounter > 7){
+  //     display.println(" ");
+  //     calendarLineCounter = 0;
+  //   }
+  //   display.print(i);
+  //   display.print(" ");
+  // }
+  display.print("1  2  3  4  5  6  7 \n 8  9 10 11 12 13 14 \n15 16 17 18 19 20 21 \n22 23 24 25 26 27 28 \n29 30 31");
+
+  display.display();
+
+  if(digitalRead(upBtn) == HIGH){
+    calendarY += 5;
+  }
+  if(digitalRead(downBtn) == HIGH){
+    calendarY -= 5;
+  }
+  if(digitalRead(rightBtn) == HIGH){
+    monthIndex++;
+  }
+  if(digitalRead(leftBtn) == HIGH){
+    monthIndex--;
+  }
+  if(digitalRead(bBtn) == HIGH){
+    state = 1;
+    appsListY = 0;
+    appChoiceIndex = 0;
+  }
+}
 
 // L O O P
 void loop() {
@@ -169,7 +369,6 @@ void loop() {
   // S T A T E S
   // Main Menu - State 1
   if(state == 0){
-    // Main Menu
     if(digitalRead(leftBtn) == HIGH){
       mainMenuItem--;
       if(mainMenuItem < 1){
@@ -195,11 +394,68 @@ void loop() {
     mainMenu(mainMenuPage, mainMenuItem); 
 
     if(digitalRead(aBtn) == HIGH){
+      // Apps page
+      if(mainMenuPage == 1 && mainMenuItem == 1){
+        state = 1;
+        appsListY = 0;
+        appChoiceIndex = 0;
+      }
+      // Games page
+      if(mainMenuPage == 1 && mainMenuItem == 2){
+        state = 2;
+      }
+      // Extra page
+      if(mainMenuPage == 2 && mainMenuItem == 1){
+        state = 3;
+      }
       // Info page
       if(mainMenuPage == 2 && mainMenuItem == 2){
         state = 4;
       }
     } 
+  }
+
+  // Apps Page - State 2
+  if(state == 1){
+    if(digitalRead(upBtn) == HIGH){
+      appChoiceIndex--;
+      if(appChoiceIndex == 0){
+        appChoiceIndex = totalAppCount;
+        appsListY = -15;
+      }
+      if(appChoiceIndex <= totalAppCount - 2){
+        appsListY += 8;
+      }
+    }
+    if(digitalRead(downBtn) == HIGH){
+      appChoiceIndex++;
+      if(appChoiceIndex >= 3){
+        appsListY -= 8;
+      }      
+      if(appChoiceIndex > totalAppCount){
+        appChoiceIndex = 1;
+        appsListY = 0;
+      }
+      
+    }
+    if(digitalRead(aBtn) == HIGH){
+      // Converter
+      if(appChoiceIndex == 1){
+        state = 5;
+      }
+      // Timer
+      if(appChoiceIndex == 3){
+        state = 6;
+      }
+      // Calendar
+      if(appChoiceIndex == 4){
+        state = 7;
+      }
+    }
+    if(digitalRead(bBtn) == HIGH){
+      goBackToMainMenu(1, 1);
+    }
+    appsPage();
   }
 
   // Info Page - State 4
@@ -217,13 +473,35 @@ void loop() {
       infoPageX -= 6;
     }
     if(digitalRead(bBtn) == HIGH){
-      state = 0;
-      mainMenuItem = 1;
-      mainMenuPage = 1;
+      goBackToMainMenu(2, 2);
     }
     infoPage();
   }
-  
+
+
+  // App 1 - Converter
+  if(state == 5){
+    numberConverter();
+  }
+  // App 2 - Timer
+  if(state == 6){
+    timer();
+  }
+  // App 3 - Calendar
+  if(state == 7){
+    calendar();
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
