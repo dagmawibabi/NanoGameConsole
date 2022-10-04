@@ -8,7 +8,7 @@
 Adafruit_SSD1306 display(-1);
 
 // G L O B A L S
-int state = 0;
+int state = 8;
 int mainMenuItem = 1;
 int mainMenuPage = 1;
 int upBtn = 6;
@@ -303,23 +303,20 @@ void timer() {
   }
 }
 
-
 // Calendar
-int monthIndex = 1;
-char *monthNames[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-int monthDates[12] = {30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
-char *weekNames[7] = {"M","T", "W", "T", "F", "S", "S"};
 int calendarY = 0;
-int calendarLineCounter = 0;
-
+int monthIndex = 0;
+char *weekNames[7] = {"M","T", "W", "T", "F", "S", "S"};
+int monthDates[12] = {30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
+char *monthNames[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 void calendar() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(BLACK, WHITE);
   display.setCursor(0, calendarY);
-  display.print("     Calendar      ");
+  display.print("       Calendar      ");
   display.setTextColor(WHITE);
-  display.setCursor(35, calendarY + 10);
+  display.setCursor(52, calendarY + 10);
   display.println(monthNames[monthIndex]);
   display.setCursor(6, calendarY + 20);
   // Week Names
@@ -329,17 +326,7 @@ void calendar() {
   }
   // Days
   display.setCursor(5, calendarY + 30);
-  // for(int i = 1; i <= monthDates[monthIndex]; i++){
-  //   calendarLineCounter++;
-  //   if(calendarLineCounter > 7){
-  //     display.println(" ");
-  //     calendarLineCounter = 0;
-  //   }
-  //   display.print(i);
-  //   display.print(" ");
-  // }
   display.print("1  2  3  4  5  6  7 \n 8  9 10 11 12 13 14 \n15 16 17 18 19 20 21 \n22 23 24 25 26 27 28 \n29 30 31");
-
   display.display();
 
   if(digitalRead(upBtn) == HIGH){
@@ -350,15 +337,102 @@ void calendar() {
   }
   if(digitalRead(rightBtn) == HIGH){
     monthIndex++;
+    if(monthIndex >= 12){
+      monthIndex = 0;
+    }
   }
   if(digitalRead(leftBtn) == HIGH){
     monthIndex--;
+    if(monthIndex <= 0){
+      monthIndex = 11;
+    }
   }
   if(digitalRead(bBtn) == HIGH){
     state = 1;
     appsListY = 0;
     appChoiceIndex = 0;
   }
+}
+
+// E X T R A S 
+int extrasListY = 0;
+int extrasChoiceIndex = 0;
+int totalExtrasCount = 4;
+void extrasPage() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(10, extrasListY);
+  display.println(" Extras ");
+  if(extrasChoiceIndex == 1){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" 8-Bit Art ");
+  if(extrasChoiceIndex == 2){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Extra 2 ");
+  if(extrasChoiceIndex == 3){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Extra 3 ");
+  if(extrasChoiceIndex == 4){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Extra 4 ");
+
+  display.display();
+}
+
+// Extra apps
+int eightBitArtTime = 3000;
+void eightBitArt(){
+  display.clearDisplay();
+  for(int i = 0; i < 40; i++){
+    int x = random(128);
+    int y = random(64);
+    int w = random(128);
+    int h = random(64);
+    int r = random(10);
+    int circleOrRect = random(1, 20);
+    if(circleOrRect == 1 || circleOrRect == 2){
+      display.drawRect(x, y, w, h, WHITE);
+    } 
+    if(circleOrRect == 3 || circleOrRect == 4){
+      display.fillRect(x, y, w, h, WHITE);
+    } 
+    if(circleOrRect == 5 || circleOrRect == 6){
+      display.fillCircle(x, y, r, WHITE);
+    } 
+    if(circleOrRect > 6){
+      display.drawCircle(x, y, r, WHITE);
+    } 
+  }
+  display.display();
+  if(digitalRead(upBtn) == HIGH){
+    eightBitArtTime += 100;
+  }
+  if(digitalRead(downBtn) == HIGH){
+    eightBitArtTime -= 100;
+    if(eightBitArtTime <= 0){
+      eightBitArtTime = 0;
+    }
+  }
+  if(digitalRead(bBtn) == HIGH){
+    state = 4;
+    extrasListY = 0;
+    extrasChoiceIndex = 0;
+  }
+  interrupts();
+  delay(eightBitArtTime);
 }
 
 // L O O P
@@ -458,6 +532,41 @@ void loop() {
     appsPage();
   }
 
+  // Extras Page - State 3
+  if(state == 3){
+    if(digitalRead(upBtn) == HIGH){
+      extrasChoiceIndex--;
+      if(extrasChoiceIndex == 0){
+        extrasChoiceIndex = totalExtrasCount;
+        extrasListY = -15;
+      }
+      if(extrasChoiceIndex <= totalExtrasCount - 2){
+        extrasListY += 8;
+      }
+    }
+    if(digitalRead(downBtn) == HIGH){
+      extrasChoiceIndex++;
+      if(extrasChoiceIndex >= 3){
+        extrasListY -= 8;
+      }      
+      if(extrasChoiceIndex > totalExtrasCount){
+        extrasChoiceIndex = 1;
+        extrasListY = 0;
+      }
+      
+    }
+    if(digitalRead(aBtn) == HIGH){
+      // 8Bit Art
+      if(extrasChoiceIndex == 1){
+        state = 8;
+      }
+    }
+    if(digitalRead(bBtn) == HIGH){
+      goBackToMainMenu(1, 1);
+    }
+    extrasPage();
+  }
+
   // Info Page - State 4
   if(state == 4){
     if(digitalRead(leftBtn) == HIGH){
@@ -478,7 +587,7 @@ void loop() {
     infoPage();
   }
 
-
+  // Apps
   // App 1 - Converter
   if(state == 5){
     numberConverter();
@@ -490,6 +599,11 @@ void loop() {
   // App 3 - Calendar
   if(state == 7){
     calendar();
+  }
+
+  // Extras
+  if(state == 8){
+    eightBitArt();
   }
 }
 
