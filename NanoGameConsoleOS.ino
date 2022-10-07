@@ -1,3 +1,4 @@
+
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -8,7 +9,7 @@
 Adafruit_SSD1306 display(-1);
 
 // G L O B A L S
-int state = 8;
+int state = 0;
 int mainMenuItem = 1;
 int mainMenuPage = 1;
 int upBtn = 6;
@@ -17,6 +18,25 @@ int leftBtn = 5;
 int rightBtn = 8;
 int aBtn = 9;
 int bBtn = 10;
+int c = 261;
+int d = 294;
+int e = 329;
+int f = 349;
+int g = 391;
+int gS = 415;
+int a = 440;
+int aS = 455;
+int b = 466;
+int cH = 523;
+int cSH = 554;
+int dH = 587;
+int dSH = 622;
+int eH = 659;
+int fH = 698;
+int fSH = 740;
+int gH = 784;
+int gSH = 830;
+int aH = 880;
 
 // S E T U P
 void setup() {                
@@ -206,6 +226,44 @@ void appsPage() {
   display.display();
 }
 
+// G A M E S  P A G E 
+int gamesListY = 0;
+int gamesChoiceIndex = 0;
+int totalGameCount = 4;
+void gamesPage() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(10, gamesListY);
+  display.println(" Games ");
+  if(gamesChoiceIndex == 1){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Starwars ");
+  if(gamesChoiceIndex == 2){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Pong ");
+  if(gamesChoiceIndex == 3){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Alien Invasion ");
+  if(gamesChoiceIndex == 4){
+    display.setTextColor(BLACK, WHITE);
+  } else {
+    display.setTextColor(WHITE);
+  }
+  display.println(" Flappy Birds ");
+
+  display.display();
+}
+
 // Apps
 // Converter
 int numConverterX = 0;
@@ -351,6 +409,162 @@ void calendar() {
     state = 1;
     appsListY = 0;
     appChoiceIndex = 0;
+  }
+}
+
+// G A M E S 
+// Starwars
+int enemyShipY = 15;
+int playerShipY1 = 10;
+int playerShipY2 = 15;
+int playerShipY3 = 12;
+int reverseShip = false;
+int curBulletX = 0;
+int curBulletY = 10;
+int enemyBulletX = 0;
+int enemyBulletY = 10;
+int starWarsScore = 0;
+int starWarsHealth = 5;
+bool gameOver = false;
+void beep(int note, int duration){
+  tone(10, note, duration);
+  delay(duration);
+  noTone(10);
+  delay(50); 
+}
+void starwarsGame() {
+  // reset
+  digitalWrite(11, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(13, LOW);
+  // clear
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  if(starWarsHealth <= 0){
+    gameOver = true;
+  }
+  if(digitalRead(aBtn) == HIGH){
+      gameOver = false;
+      starWarsScore = 0;
+      starWarsHealth = 5;
+  } 
+  if(digitalRead(bBtn) == HIGH){
+    state = 1;
+    gamesListY = 0;
+    gamesChoiceIndex = 0;
+  } 
+  if(gameOver == true){
+    display.setTextSize(2);
+    display.setCursor(10, 0);
+    display.println("GAME OVER"); 
+    display.setTextSize(1);
+    display.setCursor(40, 20);
+    display.print("Score: "); 
+    display.println(starWarsScore); 
+    display.display();
+    beep(a, 500); 
+    beep(a, 500);    
+    beep(a, 500);
+    beep(f, 350);
+    beep(cH, 150);  
+    beep(a, 500);
+    beep(f, 350);
+    beep(cH, 150);
+    beep(a, 650);
+    delay(500);     
+  } else {
+    display.drawPixel(50,30,1);
+    display.drawPixel(30,17,1);
+    display.drawPixel(60,18,1);
+    display.drawPixel(55,16,1);
+    display.drawPixel(25,43,1);
+    display.drawPixel(100,43,1); 
+    display.drawPixel(117,52,1);
+    display.drawPixel(14,49,1);
+    display.drawPixel(24,24,1);
+    display.drawPixel(78,36,1);
+    display.drawPixel(80,57,1);
+    display.drawPixel(107,11,1);
+    display.drawPixel(150,11,1);
+    display.drawPixel(5,5,1);
+    display.drawPixel(8,7,1);
+    display.drawPixel(70,12,1);
+    display.drawPixel(10,56,1);
+    display.drawPixel(70,25,1);
+    // score
+    display.setCursor(0, 0);
+    display.print(starWarsHealth);
+    display.print(" - ");
+    display.print(starWarsScore);
+    // 
+    display.drawTriangle(5, playerShipY1, 5, playerShipY2, 15, playerShipY3, WHITE);
+    // Enemy Ship
+    display.fillCircle(100, enemyShipY, 6, WHITE);
+    display.fillCircle(100, enemyShipY, 2, BLACK);
+    if(reverseShip == true){
+      enemyShipY -= 1;
+    } else {
+      enemyShipY += 1;
+    }
+    if(enemyShipY > 22){
+      reverseShip = true;
+    }
+    if(enemyShipY < 10){
+      reverseShip = false;
+    }
+
+    // control
+    if(digitalRead(upBtn) == HIGH){
+      playerShipY1 -= 3;
+      playerShipY2 -= 3;
+      playerShipY3 -= 3;
+    }
+    if(digitalRead(downBtn) == HIGH){
+      playerShipY1 += 3;
+      playerShipY2 += 3;
+      playerShipY3 += 3;
+    }
+
+    // Player Bullet
+    curBulletX += 15;
+    if(curBulletX > 100){
+      curBulletX = 15;
+      curBulletY = playerShipY3;
+    }
+    display.fillRect(curBulletX, curBulletY, 6, 1, WHITE);
+
+    // Enemy Bullet
+    enemyBulletX -= 12;
+    if(enemyBulletX < 15){
+      enemyBulletX = 100;
+      enemyBulletY = enemyShipY;
+    }
+    display.fillRect(enemyBulletX, enemyBulletY, 6, 1, WHITE);
+
+    // check collision
+    if(curBulletX >= 90){
+      int matchY1 = enemyShipY + 4;
+      int matchY2 = enemyShipY - 4;
+      if(curBulletY <= matchY1 && curBulletY >= matchY2){
+        digitalWrite(12, HIGH);
+        tone(10, 500, 20);
+        starWarsScore++;
+        // delay(100);
+      }
+    }   
+    // check damage
+    if(enemyBulletX <= 20){
+      int matchY1 = playerShipY3 + 4;
+      int matchY2 = playerShipY3 - 4;
+      if(enemyBulletY <= matchY1 && enemyBulletY >= matchY2){
+        digitalWrite(13, HIGH);
+        tone(10, 100, 100);
+        starWarsHealth--;
+        // delay(100);
+      }
+    }
+    display.display();
   }
 }
 
@@ -532,6 +746,41 @@ void loop() {
     appsPage();
   }
 
+  // Games Page - State 4
+  if(state == 2){
+    if(digitalRead(upBtn) == HIGH){
+      gamesChoiceIndex--;
+      if(gamesChoiceIndex == 0){
+        gamesChoiceIndex = totalGameCount;
+        gamesListY = -15;
+      }
+      if(gamesChoiceIndex <= totalGameCount - 2){
+        gamesListY += 8;
+      }
+    }
+    if(digitalRead(downBtn) == HIGH){
+      gamesChoiceIndex++;
+      if(gamesChoiceIndex >= 3){
+        gamesListY -= 8;
+      }      
+      if(gamesChoiceIndex > totalGameCount){
+        gamesChoiceIndex = 1;
+        gamesListY = 0;
+      }
+      
+    }
+    if(digitalRead(aBtn) == HIGH){
+      // Starwars
+      if(gamesChoiceIndex == 1){
+        state = 20;
+      }
+    }
+    if(digitalRead(bBtn) == HIGH){
+      goBackToMainMenu(1, 1);
+    }
+    gamesPage();
+  }
+
   // Extras Page - State 3
   if(state == 3){
     if(digitalRead(upBtn) == HIGH){
@@ -601,21 +850,14 @@ void loop() {
     calendar();
   }
 
+  // Games
+  // Game 1 - Starwars
+  if(state == 20){
+    starwarsGame();
+  }
+
   // Extras
   if(state == 8){
     eightBitArt();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
